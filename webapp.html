@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Interface with REST API</title>
+    <style>
+        #chat-container {
+            width: 300px;
+            height: 400px;
+            border: 1px solid #ccc;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            margin: auto;
+            margin-top: 50px;
+        }
+
+        #chat-box {
+            flex-grow: 1;
+            overflow-y: auto;
+            border: 1px solid #ccc;
+            margin-bottom: 10px;
+            padding: 5px;
+        }
+
+        #user-input {
+            width: calc(100% - 20px);
+            margin-bottom: 10px;
+        }
+
+        #send-btn {
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div id="chat-container">
+        <div id="chat-box"></div>
+        <textarea id="user-input" placeholder="Type your message here..."></textarea>
+        <button id="send-btn">Send</button>
+    </div>
+    <script>
+        document.getElementById('send-btn').addEventListener('click', function() {
+            var userInput = document.getElementById('user-input').value;
+            if (userInput.trim() !== '') {
+                sendMessage(userInput);
+                document.getElementById('user-input').value = ''; // Clear input after sending
+            }
+        });
+
+        function sendMessage(message) {
+            // Update requestBody according to the structure your API expects
+            const requestBody = {
+                text: message // Assuming the API expects a JSON with a "text" field
+            };
+
+            const requestHeaders = new Headers({
+                "Content-Type": "application/json",
+                "Authorization": "Bearer 002ZbVlmierzg9csacZj0higRJVterR7", // Use your actual API key
+                "azureml-model-deployment": "tastestproject-pumco-1" // Specific deployment, if necessary
+            });
+
+            const url = "https://tastestproject-pumco.westus.inference.ml.azure.com/score";
+
+            fetch(url, {
+                method: "POST",
+                body: JSON.stringify(requestBody),
+                headers: requestHeaders
+            })
+                .then(response => {
+                    if (response.ok) {
+                        return response.json();
+                    } else {
+                        console.error('Request failed with status:', response.status);
+                        return response.text().then(text => { throw new Error(text) });
+                    }
+                })
+                .then(data => {
+                    // Displaying response in chat box
+                    var chatBox = document.getElementById('chat-box');
+                    chatBox.innerHTML += `<div>User: ${message}</div>`;
+                    chatBox.innerHTML += `<div>Model: ${JSON.stringify(data)}</div>`;
+                    chatBox.scrollTop = chatBox.scrollHeight; // Scroll to the bottom
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error sending message. Please check the console for more details.');
+                });
+        }
+    </script>
+</body>
+</html>
